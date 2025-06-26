@@ -1,0 +1,47 @@
+{
+  "name": "research-summits-payment-gateway",
+  "version": "1.0.0",
+  "description": "Professional payment gateway for Research Summits academic conferences",
+  "main": "server.js",
+  "keywords": [
+    "research",
+    "summits",
+    "academic",
+    "conferences",
+    "payment",
+    "stripe",
+    "gateway"
+  ],
+  "author": "Research Summits Team",
+  "license": "MIT",
+  "scripts": {
+    "start": "node server.js",
+    "build": "echo 'Build completed'",
+    "dev": "nodemon server.js",
+    "test": "echo \"No tests specified\" && exit 0"
+  },
+  "dependencies": {
+    "body-parser": "^2.2.0",
+    "cors": "^2.8.5",
+    "express": "^4.21.2",
+    "helmet": "^8.1.0",
+    "path": "^0.12.7",
+    "stripe": "^14.25.0",
+    "compression": "^1.7.4"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.10"
+  },
+  "engines": {
+    "node": ">=20.0.0",
+    "npm": ">=9.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/research-summits/payment-gateway.git"
+  },
+  "homepage": "https://researchsummits.com",
+  "bugs": {
+    "url": "https://github.com/research-summits/payment-gateway/issues"
+  }
+}
