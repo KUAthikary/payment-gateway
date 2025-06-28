@@ -1,4 +1,4 @@
-```
+
 // server.js
 const express = require('express');
 const bodyParser = require('body-parser');
@@ -1542,4 +1542,4 @@ const startServer = async () => {
 
 // Start the application
 startServer();
-```
+
