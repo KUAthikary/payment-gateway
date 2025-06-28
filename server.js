@@ -210,6 +210,42 @@ app.get('/payment/:eventId', async (req, res) => {
       `);
     }
 
+    // Check for custom payment amount in query parameter
+    const customPay = req.query.pay;
+    let eventCost = event.cost; // Default from JSON
+    
+    // If custom pay amount is provided, validate and use it
+    if (customPay) {
+      const customAmount = parseFloat(customPay);
+      if (isNaN(customAmount) || customAmount <= 0) {
+        return res.status(400).send(`
+          <html>
+            <body style="font-family: 'Inter', sans-serif; text-align: center; padding: 100px 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+              <h1>Invalid Payment Amount</h1>
+              <p>Please provide a valid payment amount.</p>
+              <a href="${CONFIG?.endpoints?.redirectUrl || 'http://researchsummits.com/index.html'}" style="color: #60a5fa; text-decoration: none; font-weight: 600;">← Back to Research Summits</a>
+            </body>
+          </html>
+        `);
+      }
+      
+      // Set reasonable limits (minimum $1, maximum $10,000)
+      if (customAmount < 1 || customAmount > 10000) {
+        return res.status(400).send(`
+          <html>
+            <body style="font-family: 'Inter', sans-serif; text-align: center; padding: 100px 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+              <h1>Invalid Payment Amount</h1>
+              <p>Payment amount must be between $1 and $10,000.</p>
+              <a href="${CONFIG?.endpoints?.redirectUrl || 'http://researchsummits.com/index.html'}" style="color: #60a5fa; text-decoration: none; font-weight: 600;">← Back to Research Summits</a>
+            </body>
+          </html>
+        `);
+      }
+      
+      eventCost = customAmount;
+      console.log(`💰 Custom payment amount: ${eventCost} for event ${eventId}`);
+    }
+
     // Use the dynamically loaded publishable key
     const publishableKey = app.locals.stripePublishableKey;
     const backUrl = CONFIG?.endpoints?.redirectUrl || 'http://researchsummits.com/index.html';
@@ -623,8 +659,9 @@ app.get('/payment/:eventId', async (req, res) => {
                   <div class="event-header">
                       <h1 class="event-title">${event.eventName}</h1>
                       <p class="event-desc">${event.eventDescription}</p>
+                      ${customPay ? `<p style="color: #f093fb; font-size: 14px; font-weight: 600; margin-bottom: 15px; position: relative; z-index: 1;">Custom Amount: ${eventCost}</p>` : ''}
                       <div class="event-price">
-                          <span class="currency">$</span>${event.cost}
+                          <span class="currency">$</span>${eventCost}
                       </div>
                   </div>
                   
@@ -660,7 +697,7 @@ app.get('/payment/:eventId', async (req, res) => {
                           </div>
                           
                           <button type="submit" class="payment-button" id="payment-button">
-                              <span id="button-text">Complete Registration • $${event.cost}</span>
+                              <span id="button-text">Complete Registration • ${eventCost}</span>
                           </button>
                           
                           <div class="security-info">
@@ -762,7 +799,7 @@ app.get('/payment/:eventId', async (req, res) => {
                               name: fullName,
                               email: document.getElementById('email').value.trim(),
                               phone: document.getElementById('phone').value.trim(),
-                              amount: ${event.cost * 100}
+                              amount: ${eventCost * 100}
                           })
                       });
                       
@@ -772,7 +809,7 @@ app.get('/payment/:eventId', async (req, res) => {
                           sessionStorage.setItem('paymentData', JSON.stringify({
                               chargeId: data.chargeId,
                               eventName: '${event.eventName}',
-                              amount: '${event.cost}',
+                              amount: '${eventCost}',
                               customerName: fullName,
                               customerEmail: document.getElementById('email').value.trim()
                           }));
@@ -1397,7 +1434,13 @@ app.get('/api/health', (req, res) => {
     timestamp: new Date().toISOString(),
     service: 'Research Summits Payment Gateway',
     version: '1.0.0',
-    config: CONFIG ? 'loaded' : 'not_loaded'
+    config: CONFIG ? 'loaded' : 'not_loaded',
+    usage: {
+      payment_default: '/payment/RS2025AI',
+      payment_custom: '/payment/RS2025AI?pay=450',
+      events_api: '/api/events',
+      event_details: '/api/events/RS2025AI'
+    }
   });
 });
 
@@ -1483,7 +1526,8 @@ const startServer = async () => {
     app.listen(PORT, () => {
       console.log(`🚀 Research Summits Payment Gateway running on http://localhost:${PORT}`);
       console.log(`📱 Home redirects to: ${CONFIG?.endpoints?.redirectUrl || 'http://researchsummits.com/index.html'}`);
-      console.log(`💳 Test payment: http://localhost:${PORT}/payment/RS2025AI`);
+      console.log(`💳 Test payment (default): http://localhost:${PORT}/payment/RS2025AI`);
+      console.log(`💰 Test payment (custom): http://localhost:${PORT}/payment/RS2025AI?pay=450`);
       console.log(`🔗 Events loaded from: ${CONFIG?.endpoints?.eventsUrl || 'GitHub repository'}`);
       console.log(`🔗 Config loaded from: https://raw.githubusercontent.com/BeeBotix/researchsummits_Webpage/refs/heads/main/stripe-config.json`);
       console.log(`🔑 Stripe keys loaded from GitHub config (TEST MODE)`);
